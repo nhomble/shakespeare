@@ -77,3 +77,9 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
+/shakespeare.iml
+.idea/compiler.xml
+.idea/encodings.xml
+.idea/misc.xml
+shakespeare-core/target/
+shakespeare.iml
