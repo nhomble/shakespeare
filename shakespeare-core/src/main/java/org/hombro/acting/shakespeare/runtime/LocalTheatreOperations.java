@@ -28,6 +28,7 @@ public class LocalTheatreOperations extends TheatreOperations {
     private final MessageIdStrategy messageIdStrategy;
     private final ConcurrentMap<ActorReference, Future<?>> runningTasks;
     private final ConcurrentMap<ActorReference, RegisteredActor> registry;
+    private final ConcurrentMap<Message, Boolean> blockingMessages;
     private final ExecutorService executorService;
 
     private boolean hasStarted = false;
@@ -42,6 +43,7 @@ public class LocalTheatreOperations extends TheatreOperations {
         this.executorService = executorService;
         registry = new ConcurrentHashMap<>();
         runningTasks = new ConcurrentHashMap<>();
+        blockingMessages = new ConcurrentHashMap<>();
     }
 
     private String actorName(Class<?> clazz) {
@@ -80,8 +82,25 @@ public class LocalTheatreOperations extends TheatreOperations {
         }
 
         void handle() {
-            execution.handle(instance, inbox.poll());
+            Message message = inbox.poll();
+            execution.handle(instance, message);
+            LocalTheatreOperations local = (LocalTheatreOperations) execution.getTheatreOperations();
+            local.processedMessage(message);
         }
+    }
+
+    private void processedMessage(Message message) {
+        blockingMessages.put(message, true);
+        Set<Map.Entry<Message, Boolean>> s = blockingMessages.entrySet();
+        s.stream().filter(Map.Entry::getValue).forEach(e -> blockingMessages.remove(e.getKey()));
+    }
+
+    private void expectMessage(Message message) {
+        blockingMessages.put(message, false);
+    }
+
+    private boolean wasProcessed(Message message) {
+        return blockingMessages.get(message);
     }
 
     @Override
@@ -93,6 +112,12 @@ public class LocalTheatreOperations extends TheatreOperations {
         }
         log.trace("Send {}", message);
         registry.get(message.getSendTo()).receive(message);
+        if (message.shouldConfirmAction()) {
+            expectMessage(message);
+            while (!wasProcessed(message)) {
+                // just spin
+            }
+        }
         return message;
     }
 

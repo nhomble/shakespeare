@@ -58,6 +58,10 @@ public class ActorExecution {
         initInvocation.invoke(instance, theatreOperations, reference);
     }
 
+    public TheatreOperations getTheatreOperations(){
+        return theatreOperations;
+    }
+
     static class DefaultArgProvider implements ArgProvider {
 
         @Override

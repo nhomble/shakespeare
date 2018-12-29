@@ -5,13 +5,11 @@ import org.hombro.acting.shakespeare.actors.ActorReference;
 import org.hombro.acting.shakespeare.messages.Message;
 import org.hombro.acting.shakespeare.messages.MessageIdStrategy;
 import org.hombro.acting.shakespeare.messages.UUIDMessageIdStrategy;
-import org.hombro.acting.shakespeare.runtime.*;
 import org.hombro.acting.shakespeare.runtime.AdminActor;
-import org.hombro.acting.shakespeare.runtime.data.ShutdownData;
-import org.hombro.acting.shakespeare.runtime.data.KillActorData;
-import org.hombro.acting.shakespeare.runtime.data.KillResponse;
-import org.hombro.acting.shakespeare.runtime.data.SpawnActorData;
-import org.hombro.acting.shakespeare.runtime.data.SpawnResponse;
+import org.hombro.acting.shakespeare.runtime.InstanceLifecycleActor;
+import org.hombro.acting.shakespeare.runtime.LocalTheatreOperations;
+import org.hombro.acting.shakespeare.runtime.TheatreOperations;
+import org.hombro.acting.shakespeare.runtime.data.*;
 import org.hombro.acting.shakespeare.utils.Promise;
 
 import java.util.Collection;
@@ -41,21 +39,17 @@ public final class Theatre {
     }
 
     public SpawnResponse spawn(Class<?> actor) {
-        Promise.that(operations.hasStarted()).isTrue();
-        Message msg = operations.send(Message.builder()
-                .setData(new SpawnActorData(RootClientActor.REFERENCE, actor))
-                .setTo(InstanceLifecycleActor.REFERENCE)
-                .build());
-        return new SpawnResponse(RootClientActor.REFERENCE.append(actor), msg);
+        return spawn(actor, SpawnOptions.builder().build());
     }
 
-    public SpawnResponse spawn(Class<?> actor, ActorReference under) {
+    public SpawnResponse spawn(Class<?> actor, SpawnOptions spawnOptions) {
         Promise.that(operations.hasStarted()).isTrue();
         Message msg = operations.send(Message.builder()
-                .setData(new SpawnActorData(under, actor))
+                .setData(new SpawnActorData(spawnOptions.getParent(), actor))
                 .setTo(InstanceLifecycleActor.REFERENCE)
+                .setConfirmAction(spawnOptions.shouldAwaitConfirmation())
                 .build());
-        return new SpawnResponse(under.append(actor), msg);
+        return new SpawnResponse(spawnOptions.getParent().append(actor), msg);
     }
 
     public KillResponse kill(ActorReference reference) {

@@ -4,10 +4,7 @@ import org.hombro.acting.shakespeare.annotations.Actor;
 import org.hombro.acting.shakespeare.annotations.OnInit;
 import org.hombro.acting.shakespeare.annotations.OnMessage;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,6 +17,7 @@ public final class AnnotationHelpers {
 
     public static String determineActorName(Class<?> clazz) {
         Actor a = clazz.getAnnotation(Actor.class);
+        Promise.that(a).isNotNull();
         return a.name().isEmpty() ? clazz.getCanonicalName() : a.name();
     }
 

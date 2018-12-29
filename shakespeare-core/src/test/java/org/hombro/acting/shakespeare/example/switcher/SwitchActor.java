@@ -6,6 +6,7 @@ import org.hombro.acting.shakespeare.annotations.Actor;
 import org.hombro.acting.shakespeare.annotations.OnInit;
 import org.hombro.acting.shakespeare.annotations.OnMessage;
 import org.hombro.acting.shakespeare.messages.Message;
+import org.hombro.acting.shakespeare.runtime.data.SpawnOptions;
 
 @Actor
 public class SwitchActor {
@@ -15,8 +16,12 @@ public class SwitchActor {
 
     @OnInit
     void init(Theatre theatre, ActorReference self) {
-        a = theatre.spawn(ActorA.class, self).getReference();
-        b = theatre.spawn(ActorB.class, self).getReference();
+        a = theatre.spawn(ActorA.class, SpawnOptions.builder()
+                .setParent(self)
+                .build()).getReference();
+        b = theatre.spawn(ActorB.class, SpawnOptions.builder()
+                .setParent(self)
+                .build()).getReference();
     }
 
     @OnMessage

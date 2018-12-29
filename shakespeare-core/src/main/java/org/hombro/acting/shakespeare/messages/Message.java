@@ -15,20 +15,22 @@ public class Message {
     private final String messageId;
     private final Object data;
     private final Class<?> clazz;
+    private final boolean confirmAction;
 
-    public Message(ActorReference sendTo, String messageId, Object data, Class<?> clazz) {
+    public Message(ActorReference sendTo, String messageId, Object data, Class<?> clazz, boolean confirmAction) {
         this.sendTo = sendTo;
         this.messageId = messageId;
         this.data = data;
         this.clazz = clazz;
-    }
-
-    public Message(ActorReference sendTo, Object data, Class<?> clazz) {
-        this(sendTo, DEFERRED, data, clazz);
+        this.confirmAction = confirmAction;
     }
 
     public ActorReference getSendTo() {
         return sendTo;
+    }
+
+    public boolean shouldConfirmAction(){
+        return confirmAction;
     }
 
     public String getMessageId() {
@@ -54,11 +56,11 @@ public class Message {
         return Objects.hash(sendTo, messageId, data);
     }
 
-    public static MessageBuilder builder(){
+    public static MessageBuilder builder() {
         return new MessageBuilder();
     }
 
-    public static MessageBuilder builder(Message message){
+    public static MessageBuilder builder(Message message) {
         return new MessageBuilder(message);
     }
 
@@ -66,6 +68,7 @@ public class Message {
         private ActorReference to;
         private Object data;
         private String messageId = DEFERRED;
+        private boolean confirmAction = false;
 
         public MessageBuilder() {
         }
@@ -74,6 +77,7 @@ public class Message {
             to = message.getSendTo();
             data = message.getData();
             messageId = message.getMessageId();
+            confirmAction = message.shouldConfirmAction();
         }
 
         public MessageBuilder setTo(ActorReference to) {
@@ -91,14 +95,19 @@ public class Message {
             return this;
         }
 
+        public MessageBuilder setConfirmAction(boolean confirmAction) {
+            this.confirmAction = confirmAction;
+            return this;
+        }
+
         public Message build() {
             Promise.that(data).isNotNull();
-            return new Message(to, messageId, data, data.getClass());
+            return new Message(to, messageId, data, data.getClass(), confirmAction);
         }
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return ToStringHelper.forClass(Message.class)
                 .with("messageId", messageId)
                 .with("sendTo", sendTo)

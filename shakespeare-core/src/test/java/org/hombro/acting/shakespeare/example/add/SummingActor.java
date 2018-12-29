@@ -7,6 +7,7 @@ import org.hombro.acting.shakespeare.annotations.Data;
 import org.hombro.acting.shakespeare.annotations.OnInit;
 import org.hombro.acting.shakespeare.annotations.OnMessage;
 import org.hombro.acting.shakespeare.messages.Message;
+import org.hombro.acting.shakespeare.runtime.data.SpawnOptions;
 
 @Actor(name = "summing")
 public class SummingActor {
@@ -15,7 +16,9 @@ public class SummingActor {
 
     @OnInit
     void init(Theatre theatre, ActorReference self) {
-        printer = theatre.spawn(PrintingActor.class, self).getReference();
+        printer = theatre.spawn(PrintingActor.class, SpawnOptions.builder()
+                .setParent(self)
+                .build()).getReference();
     }
 
     @OnMessage
